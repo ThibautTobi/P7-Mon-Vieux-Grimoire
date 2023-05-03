@@ -38,7 +38,8 @@ const errorHandler = error => {
 };
 */
 
-app.set('port', process.env.PORT || 3000); // delete
+//app.set('port', process.env.PORT || 3000); // delete
+app.set('port', 4000); // delete
 const server = http.createServer(app);
 
 /***************************************************** deuxiéme partie 
@@ -53,4 +54,5 @@ server.listen(port);
 */
 
 // j'ecoute le port 3000 mais si il est utiliser dans certains cas variable d'environement (si la plateforme propose un port par defaut ce sera celui la qui sera ecouter)
-server.listen(process.env.PORT || 3000);// delete
+//server.listen(process.env.PORT || 3000 , console.log("serveur started"));// delete
+ server.listen(4000 , console.log("serveur started"));
