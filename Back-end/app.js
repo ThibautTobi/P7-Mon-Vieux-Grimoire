@@ -1,5 +1,6 @@
 const express = require ('express');
 const mongoose = require('mongoose');
+const path = require('path');
 
 /**** création d'une couche de securité ****/
 require('dotenv').config();
@@ -31,5 +32,7 @@ app.use((req, res, next) => {
 /**** dispatch routage *****/
 app.use(books_Routes);
 app.use(user_Routes);
+// gestion statique des fichier images dans le sous dossier images
+app.use('/images', express.static(path.join(__dirname, 'images')));
 
 module.exports = app;

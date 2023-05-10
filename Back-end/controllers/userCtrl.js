@@ -6,11 +6,11 @@ const bcrypt = require('bcrypt');
 
 /**********  création token **********/
 const webToken = require('jsonwebtoken');
-/***************************************** authentification utilisateur *************************************/
 
+/***************************************** authentification utilisateur *************************************/
 /************* identification et verification utilisateur , renvoi id utilisateur et un token web json  contenant id utilisateur **************/
-exports.signup = (req, res ,next) => {
-    bcrypt.hash(req.boby.password, 10)
+exports.signup = (req, res ,next) => {                  
+    bcrypt.hash(req.body.password, 10)
         .then(hash => {
             const user = new userShema({
                 email: req.body.email,
@@ -25,7 +25,7 @@ exports.signup = (req, res ,next) => {
 
 /************* ajout utilisateur a la base de donnés et hachage du mot de pass(crypto)  **************/
 exports.login = (req, res ,next) => {
-    users.findOne({email: req.body.email}
+    userShema.findOne({email: req.body.email})
         .then(user => {
             if(user === null){
                 res.status(401).json({ message : 'identifiant ou mot de passe incorrecte'});
@@ -52,5 +52,4 @@ exports.login = (req, res ,next) => {
             }
         })
         .catch(error => {res.status(500).json({ error })})
-    )
 };

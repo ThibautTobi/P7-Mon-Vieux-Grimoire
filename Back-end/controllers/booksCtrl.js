@@ -1,83 +1,115 @@
 /**** import du shema des livre pour la base de donnée ****/
+const books = require('../models/books');
 const bookShema = require('../models/books');
+const fs = require('fs');
 
 /*********** renvoie un tableau de tous les livres de la base de donnés *********/
-exports.allBooks = ((req, res ,next) => {
+exports.allBooks = (req, res ,next) => { 
     bookShema.find()
       .then(books => res.status(200).json(books) )
       .catch(error => res.status(404).json({ error }));
-
-  //  next();
-});
+};                                                             
 
 /************* ajout d'un nouveau livre  a la basse de donnés  **************/
-exports.addBook = ((req, res ,next) => {
-/**** suppression de l'id créé par le fron end si besoin ****/
-    //delete req.body._id;
-    // a voir dans le front-end
-
-    /**  demande authentification sinon pas possible **/
-  const books = new bookShema ({ ...req.body });
-      books.save()
-        .then(() => res.status(201).json({ message: `création d'un nouveau livre a réussi !`}))
-        .catch(error => res.status(400).json({ error }));
-
-  //  next();  est ce que je dois mettre le next pour que sa passe a la suite.
-});
+exports.addBook = (req, res ,next) => {
+        const bookObject = JSON.parse(req.body.Books);
+        delete bookObject._id;
+        delete bookObject._userId;
+        const book = new bookShema({
+            ...bookObject,
+            userId: req.auth.userId,
+            imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
+        });
+          book.save()
+          .then(() => { res.status(201).json({message: 'Objet enregistré !'})})
+          .catch(error => { res.status(400).json( { error })})
+};
 
 /************* renvoie le livre sélectionné grace a sont id  **************/
-exports.getOneBook =(req, res) => {
+exports.getOneBook = (req, res) => {
 
     bookShema.findOne({ _id: req.params.id})
       .then(books => res.status(200).json(books))
       .catch(error => res.status(404).json({ error }));
-  };
-
+};
 
 /************* modification d'un livre  **************/
 exports.modifyBook = (req, res, next) => {
     
-    /**  demande authentification sinon pas possible **/
-    bookShema.updateOne({ _id: req.params.id }, { ...req.body, _id: req.params.id })
-      .then(() => res.status(200).json({ message: 'Objet modifié !'}))
-      .catch(error => res.status(400).json({ error }));
-  };
-
+  const bookObject = req.file ? {
+      ...JSON.parse(req.body.book),
+      imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
+      } : { ...req.body };
+// supression userId securiter cas d'usurpation
+  delete bookObject._userId;
+  bookShema.findOne({_id: req.params.id})
+      .then((book) => {
+          if (book.userId != req.auth.userId) {
+              res.status(401).json({ message : 'Not authorisé !'});
+          } else {
+              Books.updateOne({ _id: req.params.id}, { ...bookObject, _id: req.params.id})
+              .then(() => res.status(200).json({message : 'Objet modifié !'}))
+              .catch(error => res.status(401).json({ error }));
+          }
+      })
+      .catch((error) => 
+          { res.status(400).json({ error });
+      });
+};
 
 /************* suppression d'un livre  **************/
 exports.deleteBook = (req, res, next) => {
-
-    /**  demande authentification sinon pas possible **/
-    bookShema.deleteOne({ _id: req.params.id })
-    .then(() => res.status(200).json({ message: 'Objet supprimé !'}))
-    .catch(error => res.status(400).json({ error }));
-  };
+  bookShema.findOne({ _id: req.params.id}) 
+    .then(book => {
+        if (book.userId != req.auth.userId) {
+            res.status(401).json({message: 'Not authorized'});
+        } else {
+            const filename = book.imageUrl.split('/images/')[1];
+            fs.unlink(`images/${filename}`, () => {
+                bookShema.deleteOne({_id: req.params.id})
+                    .then(() => { res.status(200).json({message: 'Objet supprimé !'})})
+                    .catch(error => res.status(401).json({ error }));
+            });
+        }
+    })
+    .catch( error => {
+        res.status(500).json({ error });
+    });
+};
 
 /************* ajout du rating  **************/
 exports.addRatingBook = (req, res ,next) => {
+//////////////////////////////////////////////////////////////////   a tester   ////////////////////////////////////////////////////////////////////////////////////////////////
+    const bookId = req.params.id;
+    const ratingValue = req.body.rating;
 
-    /**  demande authentification sinon pas possible **/
-      const books = new bookShema ({ ...req.body });
-      // ajouter que la partie rating en plus au schema !
-              books.save()
-                .then(() => res.status(201).json({ message: `ajout du rating !`}))
-                .catch(error => res.status(400).json({ error }));
-        
-        //next();
+    bookShema.findById(bookId)
+        .then(book => {
+        if (!book) {
+            return res.status(404).json({ message: "Livre non trouvé" });
+        }
+            book.ratings.push(ratingValue);
+
+            bookShema.save()
+                    .then(() => res.status(201).json({ message: `ajout du rating !`}))
+                    .catch(error => res.status(400).json({ error }));
+        })
+        .catch(error => {
+            res.status(500).json({ error });
+        });
 };
 
 
 /************* renvoie un tableu des trois livres qui ont la meilleure note moyenne  **************/
 exports.bestRating = (req, res ,next) => {
-    
-    const books = new bookShema ({ ...req.body });
-    // ajouter les trois meilleur rating ! voir methode find
-            books.find()
-              .then(() => res.status(201).json({ message: `ajout du rating !`}))
-              .catch(error => res.status(400).json({ error }));
-  
-     // next();
-    };
+    /////////////////////////////////////////////////////////////   a faire    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    //const average = req.averageRating ;
+    bookShema.find().sort({ averageRating : -1 }).limit(3)
+            .then(books => {
+                res.status(201).json({ books });
+            })
+            .catch(error => res.status(400).json({ error }));
+};
     
 
 /** test envoie */

@@ -1,7 +1,6 @@
 const http = require('http');
 const app = require('./app');
 
-/**********************************    gestion des port cours open classrooms
 const normalizePort = val => {
   const port = parseInt(val, 10);
 
@@ -13,7 +12,7 @@ const normalizePort = val => {
   }
   return false;
 };
-const port = normalizePort(process.env.PORT || '3000');
+const port = normalizePort(process.env.PORT || '4000');
 app.set('port', port);
 
 const errorHandler = error => {
@@ -35,13 +34,9 @@ const errorHandler = error => {
       throw error;
   }
 };
-*/
 
-app.set('port', process.env.PORT || 3000); // delete
-//app.set('port', 4000); // delete
 const server = http.createServer(app);
 
-/***************************************************** deuxiéme partie 
 server.on('error', errorHandler);
 server.on('listening', () => {
   const address = server.address();
@@ -50,8 +45,10 @@ server.on('listening', () => {
 });
 
 server.listen(port);
-*/
 
-// j'ecoute le port 3000 mais si il est utiliser dans certains cas variable d'environement (si la plateforme propose un port par defaut ce sera celui la qui sera ecouter)
-server.listen(process.env.PORT || 3000 , console.log(`serveur started`));// delete
-//server.listen(4000 , console.log(`serveur started`));
+
+// app.set('port', process.env.PORT || 3000);
+
+// const server = http.createServer(app);
+
+// server.listen(process.env.PORT || 3000 , console.log(`serveur started`));
