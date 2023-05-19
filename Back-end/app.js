@@ -6,8 +6,8 @@ const path = require('path');
 require('dotenv').config();
 
 /**** import de mes différentes routes ****/
-const books_Routes = require('./routes/books_Routes');
-const user_Routes = require('./routes/user_Routes');
+const books_Routes = require('./routes/books.route');
+const user_Routes = require('./routes/user.route');
 
 const app = express();
 
