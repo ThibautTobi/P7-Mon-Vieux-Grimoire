@@ -173,29 +173,21 @@ exports.addRatingBook = (req, res ,next) => {
             const sumRatings = book.ratings.reduce((sum, rating) => sum + rating.grade, 0);
             book.averageRating = sumRatings / totalRatings;
 
-             book.save()
-                     .then(() => {
-                      bookShema.findById(bookId)
-                      .then(() =>
-                        res.status(201).json({ ...book })
-                      )
-                      })
-                     .catch(error => res.status(400).json({ error }));
+             book
+                .save()
+                .then(() => { res.status(201).json(book) })
+                .catch(error => res.status(400).json({ error }));
         })
-        .catch(error => {
-            res.status(500).json({ error });
-        });
+        .catch(error => { res.status(500).json({ error }) });
 };
 
 /************* renvoie un tableu des trois livres qui ont la meilleure note moyenne  **************/
 exports.bestRating = (req, res, next) => {
-    bookShema.find()
+
+    bookShema
+        .find()
         .sort({ averageRating: -1 })
         .limit(3)
-        .then(books => {
-            res.status(200).json( books );
-          })
-        .catch(error => {
-            res.status(500).json({ error });
-        });  
+        .then(books => { res.status(200).json( books ) })
+        .catch(error => { res.status(500).json({ error }) });  
 };
